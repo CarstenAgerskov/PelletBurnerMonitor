@@ -17,7 +17,7 @@ module photoResistorTube() {
   difference() {
     cylinder(r=photoResistorR+baseThickness,h=tubeDepth);
     cylinder(r=photoResistorR+e,h=tubeDepth-1);
-    translate([0,0,0.5+tubeDepth])cube([1.2,photoResistorR*2,tubeDepth],center=true);    
+    translate([0,0,0.5+tubeDepth])cube([2,photoResistorR*2,tubeDepth],center=true);    
   }
 }
 
@@ -101,8 +101,14 @@ module clamp() {
     }
     translate([-3,0,0]) translate(hole1) cylinder(r=2,h=baseThickness);
     translate([-3,0,0]) translate(hole2) cylinder(r=2,h=baseThickness);
+    hull() {
+      translate([0.001,9,0]) cube([6,32,0.001]);
+      translate([6,9,0]) cube([6,32,2*baseThickness]);
+    }
   }
 }
+
+
 
 difference() {
   union() {
@@ -118,4 +124,3 @@ difference() {
   }
   pellxEnclosure();
 }
-
