@@ -1,0 +1,6 @@
+Visual Micro/
+*.suo
+*.sdf
+*.vmps.xml
+*.vsarduino.h
+*.opensdf
