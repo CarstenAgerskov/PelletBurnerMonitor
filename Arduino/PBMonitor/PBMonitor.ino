@@ -41,45 +41,51 @@ void loop() {
 
 	if (standByOn) {
 		if (standBy.getStatus() == LIGHT_BLINK) {
-			Serial.print("Starting: ");
-			Serial.println(standBy.getStatusTimeStamp());
+			Serial.print("('Start', ");
+			Serial.print(standBy.getStatusTimeStamp());
+			Serial.println(")");
 			standByOn = false;
 		}
 	}
 	else {
 		if (standBy.getStatus() != LIGHT_BLINK && startup.getStatus() != LIGHT_ON) {
-			Serial.print("Standby: ");
-			Serial.println(standBy.getStatusTimeStamp());
+			Serial.print("('Standby', ");
+			Serial.print(standBy.getStatusTimeStamp());
+			Serial.println(")");
 			standByOn = true;
 		}
 	}
 
 	if (startupOn) {
 		if (startup.getStatus() != LIGHT_ON) {
-			Serial.print("No low power: ");
-			Serial.println(startup.getStatusTimeStamp());
+			Serial.print("('NoLowPower', ");
+			Serial.print(startup.getStatusTimeStamp());
+			Serial.println(")");
 			startupOn = false;
 		}
 	}
 	else {
 		if (startup.getStatus() == LIGHT_ON) {
-			Serial.print("Low power: ");
-			Serial.println(startup.getStatusTimeStamp());
+			Serial.print("('LowPower', ");
+			Serial.print(startup.getStatusTimeStamp());
+			Serial.println(")");
 			startupOn = true;
 		}
 	}
 
 	if (runOn) {
 		if (run.getStatus() != LIGHT_ON) {
-			Serial.print("No high power: ");
-			Serial.println(run.getStatusTimeStamp());
-            runOn = false;
+			Serial.print("('NoHighPower', ");
+			Serial.print(run.getStatusTimeStamp());
+			Serial.println(")");
+			runOn = false;
 		}
 	}
 	else {
 		if (run.getStatus() == LIGHT_ON) {
-			Serial.print("High power: ");
-			Serial.println(run.getStatusTimeStamp());
+			Serial.print("('HighPower', ");
+			Serial.print(run.getStatusTimeStamp());
+			Serial.println(")");
 			runOn = true;
 		}
 	}
@@ -88,16 +94,18 @@ void loop() {
 	if (alarmOn) {
 		if (alarmValue == LOW) {
 			digitalWrite(LED_PIN, LOW);
-			Serial.print("Alarm off: ");
-			Serial.println(millis());
+			Serial.print("('Alarm', 'off', ");
+			Serial.print(millis());
+			Serial.println(")");
 			alarmOn = false;
 		}
 	}
 	else {
 		if (alarmValue == HIGH) {
 			digitalWrite(LED_PIN, HIGH);
-			Serial.print("Alarm on: ");
-			Serial.println(millis());
+			Serial.print("('Alarm', 'on', ");
+			Serial.print(millis());
+			Serial.println(")");
 			alarmOn = true;
 		}
 	}

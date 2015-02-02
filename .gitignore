@@ -4,3 +4,5 @@ Visual Micro/
 *.vmps.xml
 *.vsarduino.h
 *.opensdf
+*.idea
+Raspberry/PBMonitor.config
