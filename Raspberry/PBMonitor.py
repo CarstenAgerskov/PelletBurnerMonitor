@@ -1,19 +1,40 @@
 __author__ = 'Carsten Agerskov'
 
+"""
+    PBMonitor: Monitor a Pellet Burner
+    Copyright (C) 2015  Carsten Agerskov
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, version 3.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+print "PBMonitor Copyright (C) 2015  Carsten Agerskov"
+print "This program comes with ABSOLUTELY NO WARRANTY"
+print "This is free software, and you are welcome to redistribute it"
+print "under certain conditions; Refer to the GNU General Public License as published by"
+print "the Free Software Foundation, version 3"
+
 import ConfigParser
-from Instapush import Instapush, App
 import datetime
 from ast import literal_eval
+from multiprocessing import Process, Queue
 
 from ArduinoSerial import ArduinoSerial
 from PowerCycle import PowerCycle
-
+from PushNotification import pushNotification
 
 config = ConfigParser.RawConfigParser()
 config.read('PBMonitor.config')
 
-alarmAppId = config.get('Instapush','alarmAppId')
-alarmSecret =  config.get('Instapush','alarmSecret')
 serialPort = config.get('Arduino','serialPort')
 nofSerialPorts = config.get('Arduino','nofSerialPorts')
 logFile = config.get('PBMonitor','logFile')
@@ -21,39 +42,51 @@ logFile = config.get('PBMonitor','logFile')
 ser = ArduinoSerial(serialPort,nofSerialPorts)
 
 file = open(logFile, 'a+', 0 )
-pushApp = App(appid=alarmAppId, secret=alarmSecret)
 
 powerCycle = PowerCycle()
 
-while 1 :
-    line = ser.readline()
-    file.write(datetime.datetime.now().isoformat() + ":" + line)
-    print(datetime.datetime.now().isoformat() + ":" + line)
+if __name__ == '__main__':
+    queue = Queue()
+    pushNotificationPid = Process(target=pushNotification, args=(queue,))
+    pushNotificationPid.start()
+    print "starting pushNotification"
+    lineTup = ('',)
+    while lineTup[0] != "PBMonShutDown":
+        line = ser.readline()
+        file.write(datetime.datetime.now().isoformat() + ":" + line)
+        print(datetime.datetime.now().isoformat() + ":" + line)
 
-    try:
-        lineTup = literal_eval(line)
-    except:
-        print("Not a tuple, skipping analysis")
-    else:
-        if lineTup[0] == "Alarm":
-            pushApp.notify(event_name='Alarm', trackers={ 'State': lineTup[1], 'DateTime': datetime.datetime.now().isoformat()})
+        try:
+            lineTup = literal_eval(line)
+        except:
+            print("Not a tuple, skipping analysis")
+        else:
+            if lineTup[0] == "Alarm":
+                notification = (lineTup[0],lineTup[1],datetime.datetime.now().isoformat())
+                queue.put(notification)
 
-        if lineTup[0] == "Start":
-            powerCycle = PowerCycle()
-            powerCycle.startTimeStamp = lineTup[1]
+            if lineTup[0] == "PBMonShutDown":
+                notification = (lineTup[0],lineTup[1],datetime.datetime.now().isoformat())
+                queue.put(notification)
 
-        if lineTup[0] == "LowPower":
-            powerCycle.lowPowerTimeStamp = lineTup[1]
+            if lineTup[0] == "Start":
+                powerCycle = PowerCycle()
+                powerCycle.startTimeStamp = lineTup[1]
 
-        if lineTup[0] == "HighPower":
-            powerCycle.highPowerTimeStamp = lineTup[1]
+            if lineTup[0] == "LowPower":
+                powerCycle.lowPowerTimeStamp = lineTup[1]
 
-        if lineTup[0] == "Standby":
-            powerCycle.stopTimeStamp =  lineTup[1]
-            print "Wrote PowerCycle"
+            if lineTup[0] == "HighPower":
+                powerCycle.highPowerTimeStamp = lineTup[1]
 
-        print "PowerCycle: " + str(powerCycle.getPowerCycle())
+            if lineTup[0] == "Standby":
+                powerCycle.stopTimeStamp =  lineTup[1]
+                print "PowerCycle: " + str(powerCycle.getPowerCycle())
+                print "Wrote PowerCycle"
+
+
+    pushNotificationPid.join()
+
 
 ser.close()
 file.close()
-
