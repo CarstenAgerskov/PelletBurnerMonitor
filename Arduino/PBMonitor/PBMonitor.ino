@@ -1,8 +1,27 @@
+/*
+PBMonitor: Monitor a Pellet Burner
+Copyright (C) 2015  Carsten Agerskov
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 3.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
 #include "FilterStatus.h"
 
 #define LED_PIN 13
 
 #define ALARM_PIN 2
+#define SHUT_DOWN_PIN 3
 
 #define THRESHOLD_STANDBY 440
 #define THRESHOLD_START 420
@@ -14,6 +33,7 @@ bool startupOn = false;
 bool runOn = false;
 bool alarmOn = false;
 int alarmValue;
+int shutDownValue;
 
 FilterStatus run = FilterStatus(THRESHOLD_RUN, 0, A0, TIME_THRESHOLD);
 FilterStatus startup = FilterStatus(THRESHOLD_START, 0, A1, TIME_THRESHOLD);
@@ -23,6 +43,7 @@ void setup() {
 	Serial.begin(9600);
 	pinMode(LED_PIN, OUTPUT);
 	pinMode(ALARM_PIN, INPUT_PULLUP);
+	pinMode(SHUT_DOWN_PIN, INPUT_PULLUP);
 	Serial.println("Burner monitor restarting");
 	standBy.checkStatus();
 	startup.checkStatus();
@@ -50,7 +71,12 @@ void loop() {
 	else {
 		if (standBy.getStatus() != LIGHT_BLINK && startup.getStatus() != LIGHT_ON) {
 			Serial.print("('Standby', ");
-			Serial.print(standBy.getStatusTimeStamp());
+			if( startup.getStatusTimeStamp() > standBy.getStatusTimeStamp() ) {
+				Serial.print(startup.getStatusTimeStamp());
+			}
+			else  {
+				Serial.print(standBy.getStatusTimeStamp());
+			}
 			Serial.println(")");
 			standByOn = true;
 		}
@@ -109,5 +135,13 @@ void loop() {
 			alarmOn = true;
 		}
 	}
+
+	shutDownValue = digitalRead(SHUT_DOWN_PIN);
+	if (shutDownValue == LOW) {
+		Serial.print("('PBMonShutDown', 'now', ");
+		Serial.print(millis());
+		Serial.println(")");
+	}
+
 }
 
