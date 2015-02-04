@@ -38,12 +38,15 @@ def pushNotification(queue):
         while retry:
             try:
                 print "pushing notification", n
-                pushApp.notify(event_name=n[0], trackers={ 'State': n[1], 'DateTime': n[2]})
-                retry = False
+                result = pushApp.notify(event_name=n[0], trackers={ 'status': n[1], 'time': n[2]})
+                if result['error'] != False:
+                    print "Push failed: ", result
+                    retry = True
+                else:
+                    retry = False
             except:
                 retry = True
+
+            if retry:
                 print "Push of notification failed, retrying in 60 seconds"
                 time.sleep(60)
-            else:
-                retry = False
-
