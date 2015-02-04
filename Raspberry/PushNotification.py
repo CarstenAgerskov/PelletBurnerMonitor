@@ -23,14 +23,14 @@ import datetime
 import time
 
 def pushNotification(queue):
+    print "pushNotification started"
     config = ConfigParser.RawConfigParser()
     config.read('PBMonitor.config')
 
-    alarmAppId = config.get('Instapush','alarmAppId')
-    alarmSecret =  config.get('Instapush','alarmSecret')
-    pushApp = App(appid=alarmAppId, secret=alarmSecret)
+    applicationId = config.get('Instapush','applicationId')
+    applicationSecret =  config.get('Instapush','applicationSecret')
+    pushApp = App(appid=applicationId, secret=applicationSecret)
 
-    print "pushNotification started"
     n = ('',)
     while n[0] != 'PBMonShutDown':
         n = queue.get()

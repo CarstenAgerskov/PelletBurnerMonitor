@@ -20,8 +20,8 @@ __author__ = 'Carsten Agerskov'
 print "PBMonitor Copyright (C) 2015  Carsten Agerskov"
 print "This program comes with ABSOLUTELY NO WARRANTY"
 print "This is free software, and you are welcome to redistribute it"
-print "under certain conditions; Refer to the GNU General Public License as published by"
-print "the Free Software Foundation, version 3"
+print "under certain conditions; Refer to the GNU General Public License"
+print "as published by the Free Software Foundation, version 3"
 
 import ConfigParser
 import datetime
@@ -31,6 +31,7 @@ from multiprocessing import Process, Queue
 from ArduinoSerial import ArduinoSerial
 from PowerCycle import PowerCycle
 from PushNotification import pushNotification
+from PowerCycle2GSheet import powerCycle2GSheet
 
 config = ConfigParser.RawConfigParser()
 config.read('PBMonitor.config')
@@ -46,10 +47,15 @@ file = open(logFile, 'a+', 0 )
 powerCycle = PowerCycle()
 
 if __name__ == '__main__':
-    queue = Queue()
-    pushNotificationPid = Process(target=pushNotification, args=(queue,))
+    pushQueue = Queue()
+    gSheetQueue = Queue()
+    pushNotificationPid = Process(target=pushNotification, args=(pushQueue,))
+    powerCycle2GSheetPid = Process(target=powerCycle2GSheet, args=(gSheetQueue,))
     pushNotificationPid.start()
     print "starting pushNotification"
+    powerCycle2GSheetPid.start()
+    print "starting powerCycle2GSheet"
+
     lineTup = ('',)
     while lineTup[0] != "PBMonShutDown":
         line = ser.readline()
@@ -63,11 +69,7 @@ if __name__ == '__main__':
         else:
             if lineTup[0] == "Alarm":
                 notification = (lineTup[0],lineTup[1],datetime.datetime.now().isoformat())
-                queue.put(notification)
-
-            if lineTup[0] == "PBMonShutDown":
-                notification = (lineTup[0],lineTup[1],datetime.datetime.now().isoformat())
-                queue.put(notification)
+                pushQueue.put(notification)
 
             if lineTup[0] == "Start":
                 powerCycle = PowerCycle()
@@ -81,12 +83,22 @@ if __name__ == '__main__':
 
             if lineTup[0] == "Standby":
                 powerCycle.stopTimeStamp =  lineTup[1]
-                print "PowerCycle: " + str(powerCycle.getPowerCycle())
-                print "Wrote PowerCycle"
+                gSheetQueue.put(powerCycle.getPowerCycle())
+                print "Wrote PowerCycle to queue"
 
 
+    gSheetQueue.put('PBMonShutDown')
+
+    if lineTup[0] == "PBMonShutDown":
+        notification = (lineTup[0],lineTup[1],datetime.datetime.now().isoformat())
+        pushQueue.put(notification)
+    else:
+        notification = ("PBMonError",datetime.datetime.now().isoformat(),"PBMon exited unexpected")
+        pushQueue.put(notification)
+
+    powerCycle2GSheetPid.join()
     pushNotificationPid.join()
-
 
 ser.close()
 file.close()
+print "PBMonitor exited"
