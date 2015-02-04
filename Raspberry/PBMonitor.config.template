@@ -1,0 +1,19 @@
+[Instapush]
+applicationid = 
+applicationsecret = 
+
+[Google]
+gsheetkey = 
+clientid = 
+clientsecret = 
+redirecturi = urn:ietf:wg:oauth:2.0:oob
+useragent = PBMonitor
+refreshtoken = FILLED_IN_BY_GenerateTokens.py
+
+[Arduino]
+serialport = /dev/ttyUSB
+nofserialports = 3
+
+[PBMonitor]
+logfile = pb.log
+
