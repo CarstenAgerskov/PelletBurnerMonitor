@@ -32,10 +32,14 @@ class LightStatus
 	int lightAnalogPin;
 	unsigned long timeStampStateChange = 0;
 	bool lastState = false;
+	int value;
 public:
 	LightStatus(int,int,int);
 	int getStatus();
 	void checkStatus();
+	void setBlinkInterval(int);
+	void setThreshold(int);
+	int getValue();
 };
 
 #endif

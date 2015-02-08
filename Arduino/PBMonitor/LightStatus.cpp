@@ -18,7 +18,6 @@
 #ifndef _LIGHT_STATUS
 #define _LIGHT_STATUS
 
-
 #include "LightStatus.h"
 
 
@@ -34,11 +33,23 @@ int LightStatus::getStatus()
 	return lightStatus;
 }
 
+void LightStatus::setBlinkInterval(int blinkInterval) {
+	lightBlinkInterval = blinkInterval;
+}
+
+void LightStatus::setThreshold(int threshold) {
+	lightThreshold = threshold;
+}
+
+int LightStatus::getValue() {
+	return value;
+}
+
 void LightStatus::checkStatus()
 {
-	int value = analogRead(lightAnalogPin);
+	value = analogRead(lightAnalogPin);
 	unsigned long timeStamp = millis();
-	if (!lastState && value >= lightThreshold) {
+	if (!lastState && value < lightThreshold) {
 		float interval = 0;
 		if (lightBlinkInterval != 0) {
 			interval = (float)(timeStamp - timeStampStateChange) / (float)lightBlinkInterval;
@@ -48,7 +59,7 @@ void LightStatus::checkStatus()
                         Serial.print(interval);
 #endif
 		}
-		if (interval < 1.05 && interval > 0.95) {
+		if (interval < 1.2 && interval > 0.8) {
 			lightStatus = LIGHT_BLINK;
 		}
 		else
@@ -72,7 +83,7 @@ void LightStatus::checkStatus()
 		lastState = true;
 	}
 
-	if (lastState && value < lightThreshold) {
+	if (lastState && value >= lightThreshold) {
 		float interval = 0;
 		if (lightBlinkInterval != 0) {
 			interval = (float)(timeStamp - timeStampStateChange) / (float)lightBlinkInterval;
@@ -82,7 +93,7 @@ void LightStatus::checkStatus()
                         Serial.print(interval);
 #endif
 		}
-		if (interval < 1.05 && interval > 0.95) {
+		if (interval < 1.2 && interval > 0.8) {
 			lightStatus = LIGHT_BLINK;
 		}
 		else
@@ -106,9 +117,9 @@ void LightStatus::checkStatus()
 		lastState = false;
 	}
 
-	if (LIGHT_BLINK && timeStamp > timeStampStateChange + (float)lightBlinkInterval * 1.1)
+	if (lightStatus == LIGHT_BLINK && timeStamp > timeStampStateChange + (float)lightBlinkInterval * 1.2)
 	{
-		if (value >= lightThreshold) {
+		if (value < lightThreshold) {
 			lightStatus = LIGHT_ON;
 			lastState = true;
 		}
@@ -117,6 +128,11 @@ void LightStatus::checkStatus()
 			lightStatus = LIGHT_OFF;
 			lastState = false;
 		}
+#ifdef DEBUG
+		Serial.print("Expected interval for blink exceeded, state changed to: ");
+		Serial.println(lightStatus);
+
+#endif
 		timeStampStateChange = timeStamp;
 	}
 }
