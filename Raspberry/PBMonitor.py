@@ -27,6 +27,7 @@ import ConfigParser
 import datetime
 from ast import literal_eval
 from multiprocessing import Process, Queue
+import subprocess
 
 from ArduinoSerial import ArduinoSerial
 from PowerCycle import PowerCycle
@@ -99,6 +100,11 @@ if __name__ == '__main__':
     powerCycle2GSheetPid.join()
     pushNotificationPid.join()
 
-ser.close()
 file.close()
-print "PBMonitor exited"
+
+command = "/usr/bin/sudo /sbin/shutdown now"
+process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
+output = process.communicate()[0]
+print output
+
+
