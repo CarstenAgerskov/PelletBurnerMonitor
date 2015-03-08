@@ -71,17 +71,29 @@ module boards() {
 	translate([-6,23,0]) unoModule();
 }
 
-module lidSupport() {
-  translate([baseH,0,sideH]) rotate([-90,0,0]) triangle(2,2,base[1]);
-  translate([base[0]-baseH,0,sideH]) rotate([-90,90,0]) triangle(2,2,base[1]);
-  translate([baseH,0,sideH+lidH+e]) rotate([-90,0,0]) triangle(2,2,base[1]);
-  translate([base[0]-baseH,0,sideH+lidH+e]) rotate([-90,90,0]) triangle(2,2,base[1]);
-  translate([0,0,sideH]) cube([baseH,base[1],lidH+e]);
-  translate([base[0]-baseH,0,sideH]) cube([baseH,base[1],lidH+e]);
+module lidSupport(h) {
+  translate([baseH,0,h]) rotate([-90,0,0]) triangle(2,2,base[1]);
+  translate([base[0]-baseH,0,h]) rotate([-90,90,0]) triangle(2,2,base[1]);
+  translate([baseH,0,h+lidH+e]) rotate([-90,0,0]) triangle(2,2,base[1]);
+  translate([base[0]-baseH,0,h+lidH+e]) rotate([-90,90,0]) triangle(2,2,base[1]);
+  translate([0,0,h]) cube([baseH,base[1],lidH+e]);
+  translate([base[0]-baseH,0,h]) cube([baseH,base[1],lidH+e]);
 }
 
+module lid() {
+  translate([0,-baseH,deltaS]) cube([base[0],baseH,lidH]);
+  deltaS=0.8;
+  difference() {
+    translate([0,0,deltaS]) cube(base+[0,0,lidH-base[2]-deltaS]);
+    translate([-deltaS/2,-1,0]) minkowski() {
+      lidSupport(0);
+		cube([deltaS,2,deltaS]);
+    }
+  }
+}
 
-translate(base+baseTranslate) translate([-62,-100,0]) boards();
+module case() {
+  translate(base+baseTranslate) translate([-62,-100,0]) boards();
 
 difference() {
   sides();
@@ -100,10 +112,15 @@ difference() {
   translate([66,25,0]) cylinder(r=17,h=baseH);
 }
 
-lidSupport();
+lidSupport(sideH);
 
 translate([15,25,baseH]) terminalHolder();
 
 translate([7.5,5,baseH]) cableReleifBase(cableD=6);
 
 translate([5,-10,0]) cableReleifHolder(cableD=6);
+}
+
+// Depending on the size of the print bed, it is usually neccesary to print the two parts below seperately
+case();
+translate([-base[0]-10,0,0]) lid();
