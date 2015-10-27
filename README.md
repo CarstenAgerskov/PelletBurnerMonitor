@@ -1,0 +1,2 @@
+# PelletBurnerMonitor
+I am not working on this Pellet Burner Monitor project anymore. Instead, I am monitoring my pellet burner as described in this project: [Pellet Burner Sensor](https://github.com/CarstenAgerskov/PelletBurnerSensor/wiki). This new project use almost the same components, and very similar software. But it is simpler, since it is using several open source software components, like MySensors, OpenHAB and MQTT, instead of custom python code on the Pi. The functionality is similar, but not identical. The new project does not publish to Google Sheets.
